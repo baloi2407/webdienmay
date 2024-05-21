@@ -1,0 +1,248 @@
+<?php
+if(isset($_POST['dangnhap_home'])) {
+    $taikhoan = $_POST['email_login'];
+    $matkhau = md5($_POST['password_login']);
+    if($taikhoan == '' || $matkhau == '') {
+        echo '<script>alert("Xin vui lòng nhập đủ");</script>';
+    } else {
+        $sql_select_admin = mysqli_query($mysqli,"SELECT * FROM tbl_khachhang 
+        WHERE email='$taikhoan' AND password='$matkhau' LIMIT 1 ");
+        $count = mysqli_num_rows($sql_select_admin);
+        $row_danhnhap = mysqli_fetch_array($sql_select_admin);
+        if($count>0) {
+            $_SESSION['dangnhap_home'] = $row_danhnhap['khachhang_name'];
+            $_SESSION['khachhang_id'] = $row_danhnhap['khachhang_id'];
+            header('Location: index.php?quanly=giohang');
+        } else {
+            echo '<script>alert("Tài khoản hoặc mật khẩu sai");</script>';
+        }
+    }
+} 
+?>
+<?php
+$nameErr = $emailErr = $mobilenoErr = $genderErr = $agreeErr = "";  
+$name = $email = $phone= $gender= $agree = "";  
+function input_data($data) {  
+    $data = trim($data);  
+    $data = stripslashes($data);  
+    $data = htmlspecialchars($data);  
+    return $data;  
+  } 
+if(isset($_POST['dangky'])) {
+    if (empty($_POST["name"])) {  
+        $nameErr = "Name is required";  
+   } else {  
+       $name = input_data($_POST["name"]);  
+           // check if name only contains letters and whitespace  
+           if (!preg_match("/^[a-zA-Z ]*$/",$name)) {  
+               $nameErr = "Only alphabets and white space are allowed";  
+           }  
+   }  
+     
+   //Email Validation   
+   if (empty($_POST["email"])) {  
+           $emailErr = "Email is required";  
+   } else {  
+           $email = input_data($_POST["email"]);  
+           // check that the e-mail address is well-formed  
+           if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {  
+               $emailErr = "Invalid email format";  
+           }  
+    }  
+   
+   //Number Validation  
+   if (empty($_POST["phone"])) {  
+           $mobilenoErr = "Mobile no is required";  
+   } else {  
+           $mobileno = input_data($_POST["phone"]);  
+           // check if mobile no is well-formed  
+           if (!preg_match ("/^[0-9]*$/", $mobileno) ) {  
+           $mobilenoErr = "Only numeric value is allowed.";  
+           }  
+       //check mobile no length should not be less and greator than 10  
+       if (strlen ($mobileno) <= 9) {  
+           $mobilenoErr = "Mobile no must contain 10 digits.";  
+           }  
+   }  
+   $password = $_POST['password'];
+   $address = $_POST['address'];
+    if($nameErr == "" && $emailErr == "" && $mobilenoErr == "" ) {  
+        $sql_khachhang = mysqli_query($mysqli,"INSERT INTO
+        tbl_khachhang(khachhang_name,phone,khachhang_address,email,password)
+        values('$name','$mobileno','$address','$email','$password')");
+    $sql_select_khachhang = mysqli_query($mysqli,"SELECT * FROM tbl_khachhang ORDER BY khachhang_id DESC LIMIT 1");  
+    $row_khachhang = mysqli_fetch_array($sql_select_khachhang);  
+    $_SESSION['dangnhap_home'] = $name;
+    $_SESSION['khachhang_id'] = $row_khachhang['khachhang_id'];
+    header('Location: index.php?quanly=giohang');
+    } else {  
+    echo '<script>alert("Unsuccessfully")</script>';  
+    }  
+    
+    
+}
+?>
+
+<!-- top-header -->
+<div class="agile-main-top">
+    <div class="container-fluid">
+        <div class="row main-top-w3l py-2">
+            <div class="col-lg-4 header-most-top">
+                <p class="text-white text-lg-left text-center">Offer Zone Top Deals & Discounts
+                    <i class="fas fa-shopping-cart ml-1"></i>
+                </p>
+            </div>
+            <div class="col-lg-8 header-right mt-lg-0 mt-2">
+                <!-- header lists -->
+                <ul>
+                    <?php
+                    if(isset($_SESSION['dangnhap_home'])) {
+                    ?>
+                    <li class="text-center border-right text-white">
+                        <a href="index.php?quanly=xemdonhang&khachhang=<?php echo $_SESSION['khachhang_id']; ?>" data-toggle="" data-target="" class="text-white">
+                            <i class="fas fa-truck mr-2"></i>Xem đơn hàng: <?php echo $_SESSION['dangnhap_home']; ?>
+                        </a>
+                    </li>
+                    <?php
+                    }
+                    ?>
+                    <li class="text-center border-right text-white">
+                        <i class="fas fa-phone mr-2"></i> 001 234 5678
+                    </li>
+                    <li class="text-center border-right text-white">
+                        <a href="#" data-toggle="modal" data-target="#dangnhap" class="text-white">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Đăng nhập </a>
+                    </li>
+                    <li class="text-center text-white">
+                        <a href="#" data-toggle="modal" data-target="#dangky" class="text-white">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Đăng ký </a>
+                    </li>
+                </ul>
+                <!-- //header lists -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- log in -->
+<div class="modal fade" id="dangnhap" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-center">Đăng nhập</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post">
+                    <div class="form-group">
+                        <label class="col-form-label">Email</label>
+                        <input type="text" class="form-control" placeholder=" " name="email_login" required="">
+                    </div>
+                    <div class="form-group">
+                        <label class="col-form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" placeholder=" " name="password_login" required="">
+                    </div>
+                    <div class="right-w3l">
+                        <input type="submit" class="form-control" value="Đăng nhập" name="dangnhap_home">
+                    </div>
+                    <div class="sub-w3l">
+                        <!-- <div class="custom-control custom-checkbox mr-sm-2">
+                            <input type="checkbox" class="custom-control-input" id="customControlAutosizing">
+                            <label class="custom-control-label" for="customControlAutosizing">Remember me?</label>
+                        </div> -->
+                    </div>
+                    <p class="text-center dont-do mt-3">Chưa có tài khoản?
+                        <a href="#" data-toggle="modal" data-target="#dangky">
+                            Đăng ký</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- register -->
+<div class="modal fade" id="dangky" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Đăng ký</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post">
+                    <div class="form-group">
+                        <label class="col-form-label">Tên người dùng</label>
+                        <input type="text" class="form-control" placeholder=" " name="name">
+                        <span class="error">* </span>  
+                        <br><br>  
+                    </div>
+                    <div class="form-group">
+                        <label class="col-form-label">Email</label>
+                        <input type="email" class="form-control" placeholder=" " name="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="col-form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" placeholder=" " name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label class="col-form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" placeholder=" " name="address">
+                    </div>
+                    <div class="form-group">
+                        <label class="col-form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" placeholder=" " name="password">
+                    </div>
+                    <div class="right-w3l">
+                        <input type="submit" class="form-control" value="Đăng ký" name="dangky">
+                    </div>
+                    <div class="sub-w3l">
+                        <!-- <div class="custom-control custom-checkbox mr-sm-2">
+                            <input type="checkbox" class="custom-control-input" id="customControlAutosizing2">
+                            <label class="custom-control-label" for="customControlAutosizing2">I Accept to the Terms & Conditions</label>
+                        </div> -->
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- //modal -->
+<!-- //top-header -->
+
+<!-- header-bottom-->
+<div class="header-bot">
+    <div class="container">
+        <div class="row header-bot_inner_wthreeinfo_header_mid">
+            <!-- logo -->
+            <div class="col-md-3 logo_agile">
+                <h1 class="text-center">
+                    <a href="index.php" class="font-weight-bold font-italic">
+                        <img src="images/logo2.png" alt=" " class="img-fluid"> E Store 2
+                    </a>
+                </h1>
+            </div>
+            <!-- //logo -->
+            <!-- header-bot -->
+            <div class="col-md-9 header mt-4 mb-md-0 mb-4">
+                <div class="row">
+                    <!-- search -->
+                    <div class="col-10 agileits_search">
+                        <form class="form-inline" action="index.php?quanly=timkiem" method="POST">
+                            <input class="form-control mr-sm-2" name="timkiemsanpham" type="search" placeholder="Tìm kiếm" aria-label="Search" required>
+                            <button class="btn my-2 my-sm-0" name="timkiem_btn" type="submit">Tìm kiếm</button>
+                        </form>
+                    </div>
+                    <!-- //search -->
+                    <!-- cart details -->
+                    
+                    <!-- //cart details -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- shop locator (popup) -->
+<!-- //header-bottom -->
